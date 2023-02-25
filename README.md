@@ -10,3 +10,14 @@ In short:
   -49 Autolevel Mesh Points<br>
 
 Source code will follow
+
+Instructions for installing printer firmware:<br>
+
+-Put the firmware.bin into the root of the SD and insert it to the 3D printer SD slot (Not the LCD)<br>
+-Switch the 3D printer on and wait for the beeps. <br>
+
+Instructions for installing the UI:<br>
+
+-Put the DWIN_SET folder into the root of the SD and insert it to the 3D LCD SD slot (Not the printer slot)<br>
+-Switch the 3D printer on and wait for the blue screen. After it's done,remove the SD card and restart the printer<br>
+
