@@ -3,9 +3,9 @@ New Kobra Max UI based on Cobra Kai and M117 Support
 
 In short:
 
--Cobra Kai UI
--Esteps set to 427
--Z offset babysteps at 0.01
--M117 Enabled for comments (Layer height etc)
--49 Autolevel Mesh Points
+  -Cobra Kai UI<br>
+  -E-steps set to 427<br>
+  -Z offset babysteps at 0.01<br>
+  -M117 Enabled for comments (Layer height etc)<br>
+  -49 Autolevel Mesh Points<br>
 
