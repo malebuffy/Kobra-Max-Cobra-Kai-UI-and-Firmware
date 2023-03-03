@@ -9,8 +9,6 @@ In short:
   -M117 Enabled for comments (Layer height etc)<br>
   -49 Autolevel Mesh Points<br>
 
-Source code will follow
-
 Instructions for installing printer firmware:<br>
 
 -Put the firmware.bin into the root of the SD and insert it to the 3D printer SD slot (Not the LCD)<br>
