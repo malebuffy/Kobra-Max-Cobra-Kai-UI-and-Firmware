@@ -3,11 +3,11 @@ New Kobra Max UI based on Cobra Kai and M117 Support and G-code Thumbnail Previe
 
 Changelog:
 
-v0.2
+v0.2<br>
   -Added G-Code Preview function<br>
   -Cura Post-Script <br>
 
-v0.1
+v0.1<br>
   -Cobra Kai UI<br>
   -E-steps set to 427<br>
   -Z offset babysteps at 0.01<br>
