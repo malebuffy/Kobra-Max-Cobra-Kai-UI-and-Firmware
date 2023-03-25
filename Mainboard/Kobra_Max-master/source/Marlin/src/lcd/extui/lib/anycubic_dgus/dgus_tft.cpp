@@ -44,6 +44,170 @@
 #include "../../../../MarlinCore.h"
 #include "../../../../feature/powerloss.h"
 
+// BEGIN SPECIAL CODE
+
+#include <stdio.h>
+#include <cstring>
+#include <string>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdint.h>
+#include <sstream>
+
+
+
+
+const char* myThumbnail;
+typedef struct {
+  char name[13] = "";   //8.3 + null
+  uint32_t thumbstart = 0;
+  int thumbsize = 0;
+  int thumbheight = 0;
+  int thumbwidth = 0;
+  uint8_t *thumbdata = nullptr;
+  float time = 0;
+  float filament = 0;
+  float layer = 0;
+  float width = 0;
+  float height = 0;
+  float length = 0;
+  void setname(const char * const fn);
+  void clear();
+} fileprop_t;
+fileprop_t fileprop;
+
+void fileprop_t::setname(const char * const fn) {
+  const uint8_t len = _MIN(sizeof(name) - 1, strlen(fn));
+  memcpy(&name[0], fn, len);
+  name[len] = '\0';
+}
+
+void fileprop_t::clear() {
+  fileprop.name[0] = '\0';
+  fileprop.thumbstart = 0;
+  fileprop.thumbsize = 0;
+  fileprop.thumbheight = 0;
+  fileprop.thumbwidth = 0;
+  fileprop.thumbdata = nullptr;
+  fileprop.time = 0;
+  fileprop.filament = 0;
+  fileprop.layer = 0;
+  fileprop.height = 0;
+  fileprop.width = 0;
+  fileprop.length = 0;
+}
+
+void Get_Value(char *buf, const char * const key, float &value) {
+  char num[10] = "";
+  char * posptr = 0;
+  uint8_t i = 0;
+  if (!!value) return;
+  posptr = strstr(buf, key);
+  if (posptr != nullptr) {
+    while (i < sizeof(num)) {
+      char c = posptr[0];
+      if (!ISEOL(c) && (c != 0)) {
+        if ((c > 47 && c < 58) || (c == '.')) num[i++] = c;
+        posptr++;
+      }
+      else {
+        num[i] = '\0';
+        value = atof(num);
+        return;
+      }
+    }
+  }
+}
+
+bool Has_Preview() {
+  const char * tbstart = "; thumbnail kobra 150x120";
+  char * posptr = 0;
+  uint8_t nbyte = 1;
+  uint32_t indx = 0;
+  char buf[256];
+  float tmp = 0;
+
+  fileprop.clear();
+  fileprop.setname(card.filename);
+
+  card.openFileRead(fileprop.name);
+
+  while ((nbyte > 0) && (indx < 4 * sizeof(buf)) && !fileprop.thumbstart) {
+    nbyte = card.read(buf, sizeof(buf) - 1);
+    if (nbyte > 0) {
+      buf[nbyte] = '\0';
+      Get_Value(buf, ";TIME:", fileprop.time);
+      Get_Value(buf, ";Filament used:", fileprop.filament);
+      Get_Value(buf, ";Layer height:", fileprop.layer);
+      Get_Value(buf, ";MINX:", tmp);
+      Get_Value(buf, ";MAXX:", fileprop.width);
+      fileprop.width -= tmp;
+      tmp = 0;
+      Get_Value(buf, ";MINY:", tmp);
+      Get_Value(buf, ";MAXY:", fileprop.length);
+      fileprop.length -= tmp;
+      tmp = 0;
+      Get_Value(buf, ";MINZ:", tmp);
+      Get_Value(buf, ";MAXZ:", fileprop.height);
+      fileprop.height -= tmp;
+      posptr = strstr(buf, tbstart);
+      if (posptr != nullptr) {
+        fileprop.thumbstart = indx + (posptr - &buf[0]);
+      }
+      else {
+        indx += _MAX(10, nbyte - (signed)strlen(tbstart));
+        card.setIndex(indx);
+      }
+    }
+  }
+
+  if (!fileprop.thumbstart) {
+    card.closefile();
+    // // LCD_MESSAGE_F("Thumbnail not found");
+    return 0;
+  }
+
+  // Get the size of the thumbnail
+  card.setIndex(fileprop.thumbstart + strlen(tbstart));
+  for (uint8_t i = 0; i < 16; i++) {
+    char c = card.get();
+    if (!ISEOL(c)) {
+      buf[i] = c;
+    }
+    else {
+      buf[i] = 0;
+      break;
+    }
+  }
+  fileprop.thumbsize = atoi(buf);
+
+  // Exit if there isn't a thumbnail
+  if (!fileprop.thumbsize) {
+    card.closefile();
+    //// LCD_MESSAGE_F("Invalid Thumbnail Size");
+    return 0;
+  }
+
+  uint16_t readed = 0;
+  char buf64[fileprop.thumbsize];
+  myThumbnail = new char[fileprop.thumbsize + 1]; // Reserve space for the JPEG thumbnail
+
+  while (readed < fileprop.thumbsize) {
+    uint8_t c = card.get();
+    if (!ISEOL(c) && (c != ';') && (c != ' ')) {
+      buf64[readed] = c;
+      readed++;
+    }
+  }
+  card.closefile();
+  buf64[readed] = 0;
+
+  memcpy((void*)myThumbnail, buf64, fileprop.thumbsize + 1);
+  return true;
+}
+
+
+// END SPECIAL CODE
 
 
 namespace Anycubic {
@@ -287,7 +451,11 @@ namespace Anycubic {
     } else if(page_index_now == 207 || page_index_now == 209) {
 
       page207_209_handle();
+		
+		} else if(page_index_now == 208) {
 
+      pageIco_handle();
+		
     } else if(page_index_now == 211 || page_index_now == 212) {
 
       page211_212_handle();
@@ -796,6 +964,47 @@ namespace Anycubic {
       TFTSer.write(data_buf[i]);
     }
   }
+	
+	
+	void DgusTFT::SendHexToTFT(const char *pdata) {
+    const char* hex_str = pdata;
+    size_t len = strlen(hex_str);
+    uint8_t bytes[len/2];
+
+    // Find the position of "5AA5" closest to the middle of hex_str
+    size_t middle = len / 2;
+    const char* split_point = nullptr;
+    const char* search_ptr = hex_str;
+
+    while ((search_ptr = strstr(search_ptr, "5AA5")) != nullptr) {
+        if (abs((search_ptr - hex_str) - middle) < abs((split_point - hex_str) - middle) || split_point == nullptr) {
+            split_point = search_ptr;
+        }
+        search_ptr += 4; // Move to the next position after the found "5AA5"
+    }
+
+    if (split_point == nullptr) {
+        // "5AA5" not found, return
+        return;
+    }
+
+    // Calculate lengths for the two parts
+    size_t first_part_len = split_point - hex_str;
+    size_t second_part_len = len - first_part_len;
+
+    // Send the first part
+    for (size_t i = 0; i < first_part_len; i += 2) {
+        sscanf(hex_str + i, "%2hhx", &bytes[i/2]);
+        TFTSer.write(bytes[i/2]);
+    }
+
+    // Send the second part
+    for (size_t i = 0; i < second_part_len; i += 2) {
+        sscanf(split_point + i, "%2hhx", &bytes[(first_part_len + i)/2]);
+        TFTSer.write(bytes[(first_part_len + i)/2]);
+    }
+}
+	
 
   void DgusTFT::SendColorToTFT(uint32_t color, uint32_t address) {
 
@@ -1475,6 +1684,127 @@ namespace Anycubic {
 	  }
 	  break;
 
+
+	  case 6:   // Go to preview screen
+          if(lcd_txtbox_index > 0 && lcd_txtbox_index  < 6) {   // 1~5
+
+            if(filenavigator.filelist.seek(lcd_txtbox_page*5+(lcd_txtbox_index-1))) {
+
+              SendColorToTFT(COLOR_WHITE, TXT_DISCRIBE_0+0x30*(lcd_txtbox_index-1));
+              char str_buf[20];
+              	
+
+							// Send file name
+							strncpy_P(str_buf, filenavigator.filelist.longFilename(), 19);
+              str_buf[19] = '\0';
+              SendTxtToTFT(str_buf, TXT_PRINT_NAME); 
+									
+							// Send ICO to Preview Screen
+								 
+							if (Has_Preview()) { 
+
+									char buf[46];
+									char str_1[6] = "";
+									char str_2[6] = "";
+									char str_3[6] = "";
+
+									if (fileprop.time) {
+										sprintf_P(buf, PSTR("Estimated time: %i:%02i"), (uint16_t)fileprop.time / 3600, ((uint16_t)fileprop.time % 3600) / 60);
+										SendTxtToTFT(buf,0x21b0);
+									}
+									if (fileprop.filament) {
+										sprintf_P(buf, PSTR("Filament used: %s m"), dtostrf(fileprop.filament, 1, 2, str_1));
+										SendTxtToTFT(buf,0x21e0);
+									}
+									if (fileprop.layer) {
+										sprintf_P(buf, PSTR("Layer height: %s mm"), dtostrf(fileprop.layer, 1, 2, str_1));
+										SendTxtToTFT(buf,0x2210);
+									}
+									if (fileprop.width) {
+										sprintf_P(buf, PSTR("Volume: %sx%sx%s mm"), dtostrf(fileprop.width, 1, 1, str_1), dtostrf(fileprop.length, 1, 1, str_2), dtostrf(fileprop.height, 1, 1, str_3));
+										SendTxtToTFT(buf,0x2240);
+									}
+															
+									 SendHexToTFT(myThumbnail);
+									 delete[] myThumbnail;	
+									 SendHexToTFT("5AA507827FFE5AA58000");
+
+							} else {
+									
+										// Erase all other date expect name
+										SendTxtToTFT("                              ",0x21b0);
+										SendTxtToTFT("                              ",0x21e0);
+										SendTxtToTFT("                              ",0x2210);								
+										SendTxtToTFT("                              ",0x2240);
+										SendHexToTFT("5AA5F3828000ffd8ffe000104a46494600010101006000600000ffdb004300100b0c0e0c0a100e0d0e1211101318281a181616183123251d283a333d3c3933383740485c4e404457453738506d51575f626768673e4d71797064785c656763ffdb0043011112121815182f1a1a2f634238426363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363ffc00011080001000103012200021101031101ffc4001f0000010501010101010100000000000000000102030405060708090a0bffc400b5100002010303020403050504040000017d0102030004110512215AA5F382807831410613516107227114328191a1082342b1c11552d1f02433627282090a161718191a25262728292a3435363738393a434445464748494a535455565758595a636465666768696a737475767778797a838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae1e2e3e4e5e6e7e8e9eaf1f2f3f4f5f6f7f8f9faffc4001f0100030101010101010101010000000000000102030405060708090a0bffc400b51100020102040403040705040400010277000102031104052131061241510761711322328108144291a1b1c109233352f0155AA5F38280F06272d10a162434e125f11718191a262728292a35363738393a434445464748494a535455565758595a636465666768696a737475767778797a82838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae2e3e4e5e6e7e8e9eaf2f3f4f5f6f7f8f9faffda000c03010002110311003f00e5a8a28ae703ffd90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+									  SendHexToTFT("5AA507827FFE5AA80000");
+						}
+							
+									// Change to Preview Screen
+									ChangePageOfTFT(PAGE_PREVIEW);
+            }
+          }	
+					
+	  break;
+
+	  case 7:   // txtbox 1 click
+	  case 8:   // txtbox 2 click
+	  case 9:   // txtbox 3 click
+	  case 10:  // txtbox 4 click
+	  case 11:  // txtbox 5 click
+	  {
+        static uint8_t lcd_txtbox_index_last = 0;
+
+        if((lcd_txtbox_page*5 + key_value - 6) <= filenavigator.getFileNum()) {
+            lcd_txtbox_index = key_value - 6;
+        } else {
+            break;
+        }
+
+#if ACDEBUG(AC_MARLIN)
+        printf("getFileNum: %d\n", filenavigator.getFileNum());
+        printf("file_index: %d\n", file_index);
+        printf("lcd_txtbox_page: %d\n", lcd_txtbox_page);
+        printf("lcd_txtbox_index: %d\n", lcd_txtbox_index);
+        printf("lcd_txtbox_index_last: %d\n", lcd_txtbox_index_last);
+#endif
+
+        // lcd_txtbox_page 0~...
+        // lcd_txtbox_index 1~5
+	    file_index = lcd_txtbox_page*5 + (lcd_txtbox_index-1);
+	    if(file_index < filenavigator.getFileNum()) {
+
+          SendColorToTFT(COLOR_RED, TXT_DISCRIBE_0 + 0x30*(lcd_txtbox_index-1));
+
+          if(lcd_txtbox_index_last && lcd_txtbox_index_last != lcd_txtbox_index) {   // 1~5
+            SendColorToTFT(COLOR_WHITE, TXT_DISCRIBE_0 + 0x30*(lcd_txtbox_index_last-1));
+          }
+          lcd_txtbox_index_last = lcd_txtbox_index;
+	    }
+	    break;
+	  }
+   }
+  }
+	
+	
+	void DgusTFT::pageIco_handle(void) {
+
+  char file_index = 0;
+
+	switch (key_value) {
+	case 0:
+      break;
+
+	case 1: // return
+	  {
+		 
+		 lcd_txtbox_index = 0;
+	   ChangePageOfTFT(PAGE_FILE);
+	   
+	  }
+	  break;
+
+
 	  case 5: // resume of outage(last power off)
 #if ACDEBUG(AC_MARLIN)
 	    SERIAL_ECHOLNPAIR("printer_state: ", printer_state);
@@ -1553,45 +1883,11 @@ namespace Anycubic {
             }
           }
 	  break;
-
-	  case 7:   // txtbox 1 click
-	  case 8:   // txtbox 2 click
-	  case 9:   // txtbox 3 click
-	  case 10:  // txtbox 4 click
-	  case 11:  // txtbox 5 click
-	  {
-        static uint8_t lcd_txtbox_index_last = 0;
-
-        if((lcd_txtbox_page*5 + key_value - 6) <= filenavigator.getFileNum()) {
-            lcd_txtbox_index = key_value - 6;
-        } else {
-            break;
-        }
-
-#if ACDEBUG(AC_MARLIN)
-        printf("getFileNum: %d\n", filenavigator.getFileNum());
-        printf("file_index: %d\n", file_index);
-        printf("lcd_txtbox_page: %d\n", lcd_txtbox_page);
-        printf("lcd_txtbox_index: %d\n", lcd_txtbox_index);
-        printf("lcd_txtbox_index_last: %d\n", lcd_txtbox_index_last);
-#endif
-
-        // lcd_txtbox_page 0~...
-        // lcd_txtbox_index 1~5
-	    file_index = lcd_txtbox_page*5 + (lcd_txtbox_index-1);
-	    if(file_index < filenavigator.getFileNum()) {
-
-          SendColorToTFT(COLOR_RED, TXT_DISCRIBE_0 + 0x30*(lcd_txtbox_index-1));
-
-          if(lcd_txtbox_index_last && lcd_txtbox_index_last != lcd_txtbox_index) {   // 1~5
-            SendColorToTFT(COLOR_WHITE, TXT_DISCRIBE_0 + 0x30*(lcd_txtbox_index_last-1));
-          }
-          lcd_txtbox_index_last = lcd_txtbox_index;
-	    }
-	    break;
-	  }
     }
   }
+	
+	
+	
 
     
     void DgusTFT::page3_handle(void)

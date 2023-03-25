@@ -61,6 +61,7 @@
 #define PAGE_LEVEL_ADVANCE (17+PAGE_OFFSET)
 #define PAGE_PREHEAT       (18+PAGE_OFFSET)
 #define PAGE_FILAMENT      (19+PAGE_OFFSET)
+#define PAGE_PREVIEW       (88+PAGE_OFFSET)
 
 #define PAGE_DONE           (20+PAGE_OFFSET)
 #define PAGE_ABNORMAL       (21+PAGE_OFFSET)
@@ -157,6 +158,7 @@
 #define TXT_DISCRIBE_3      0x5090
 #define TXT_FILE_4          (0x2000+7*0x30)
 #define TXT_DISCRIBE_4       0x50C0
+#define ICO_FILE             0x7FFE
 
 // PRINT TXT
 #define TXT_PRINT_NAME          0x2000+8*0x30
@@ -247,7 +249,6 @@
 // FILE PAGE KEY
 
 #define KEY_FILE_TO_MAIN    1  
-#define KEY_PRINT           6
 #define KEY_RESUME          5
 #define KEY_PgUp            2
 #define KEY_pgDn            3
@@ -257,6 +258,11 @@
 #define KEY_FILE2			9
 #define KEY_FILE3			10
 #define KEY_FILE4			11
+
+
+// PREVIEW PAGE KEY
+#define KEY_TO_FILE         1  
+#define KEY_PRINT           6
 
 
 #define KEY_CONTINUE        2
@@ -479,7 +485,7 @@ namespace Anycubic {
       static void page206_handle(void);
 
       static void page207_209_handle(void);
-
+			static void pageIco_handle(void);  // PreviewPage handler
       static void page211_212_handle(void);
 
       static void pop_up_manager(void);
@@ -503,16 +509,11 @@ namespace Anycubic {
       static void RequestValueFromTFT(uint32_t address);
       static void SendTxtToTFT(const char *pdata, uint32_t address);
       static void SendColorToTFT(uint32_t color, uint32_t address);
+			static void SendHexToTFT(const char *pdata);
       static void SendReadNumOfTxtToTFT(uint8_t number, uint32_t address);
       static void ChangePageOfTFT(uint32_t page_index);
       static void FakeChangePageOfTFT(uint32_t page_index);
       static void LcdAudioSet(ExtUI::audio_t audio);
-			
-			
-			//PREVIEW PAGE
-			static void page213_handle(void); 
-			static void SendVarIconToTFT(const char *vdata, uint32_t address);
-
 
     private:
     
