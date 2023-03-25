@@ -4,8 +4,8 @@ New Kobra Max UI based on Cobra Kai and M117 Support and G-code Thumbnail Previe
 Changelog:
 
 v0.2
-  -Added G-Code Preview function
-  -Cura Post-Script 
+  -Added G-Code Preview function<br>
+  -Cura Post-Script <br>
 
 v0.1
   -Cobra Kai UI<br>
