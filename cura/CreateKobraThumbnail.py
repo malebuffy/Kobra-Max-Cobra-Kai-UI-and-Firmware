@@ -54,7 +54,7 @@ class CreateKobraThumbnail(Script):
             else:
                 thumbnail_buffer.open(QBuffer.OpenModeFlag.ReadWrite)
             thumbnail_image = snapshot
-            thumbnail_image.save(thumbnail_buffer, "JPG", quality=30)
+            thumbnail_image.save(thumbnail_buffer, "JPG", quality=20)
             hex_bytes = binascii.hexlify(thumbnail_buffer.data())
             hex_message = hex_bytes.decode('ascii')
             thumbnail_buffer.close()
