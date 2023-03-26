@@ -113,7 +113,7 @@ class CreateKobraThumbnail(Script):
     def execute(self, data):
         snapshot = self._createSnapshot()
         if snapshot:
-            quality = 40
+            quality = 50
             while True:
                 encoded_snapshot = self._encodeSnapshot(snapshot, quality)
                 snapshot_gcode = self._convertSnapshotToGcode(encoded_snapshot)
