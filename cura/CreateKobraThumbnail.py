@@ -9,8 +9,8 @@
 # Contains code from:
 # https://github.com/Ultimaker/Cura/blob/master/plugins/PostProcessingPlugin/scripts/CreateThumbnail.py
 #------------------------------------------------------------------------------
-
 import binascii
+import time  # add this import statement to use time.sleep()
 
 from UM.Logger import Logger
 from cura.Snapshot import Snapshot
@@ -32,7 +32,7 @@ class CreateKobraThumbnail(Script):
         except Exception:
             Logger.logException("w", "Failed to create snapshot image")
 
-    def _encodeSnapshot(self, snapshot):
+    def _encodeSnapshot(self, snapshot, quality=40):      
         Major = 0
         Minor = 0
         try:
@@ -54,7 +54,7 @@ class CreateKobraThumbnail(Script):
             else:
                 thumbnail_buffer.open(QBuffer.OpenModeFlag.ReadWrite)
             thumbnail_image = snapshot
-            thumbnail_image.save(thumbnail_buffer, "JPG", quality=20)
+            thumbnail_image.save(thumbnail_buffer, "JPG", quality=quality)  # pass quality argument
             hex_bytes = binascii.hexlify(thumbnail_buffer.data())
             hex_message = hex_bytes.decode('ascii')
             thumbnail_buffer.close()
@@ -109,11 +109,18 @@ class CreateKobraThumbnail(Script):
             "settings": {}
         }"""
 
+
     def execute(self, data):
         snapshot = self._createSnapshot()
         if snapshot:
-            encoded_snapshot = self._encodeSnapshot(snapshot)
-            snapshot_gcode = self._convertSnapshotToGcode(encoded_snapshot)
+            quality = 40
+            while True:
+                encoded_snapshot = self._encodeSnapshot(snapshot, quality)
+                snapshot_gcode = self._convertSnapshotToGcode(encoded_snapshot)
+                final_size = len("\n".join(snapshot_gcode))
+                if final_size < 6000:
+                    break
+                quality -= 3
 
             for layer in data:
                 layer_index = data.index(layer)
@@ -129,3 +136,5 @@ class CreateKobraThumbnail(Script):
                 data[layer_index] = final_lines
 
         return data
+
+
