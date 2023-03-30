@@ -6,6 +6,9 @@ Changelog:
 v0.2<br>
   -Added G-Code Preview function<br>
   -Cura Post-Script <br>
+  <br>
+  
+![Preview](https://user-images.githubusercontent.com/23300461/228777395-b01aed67-0d09-40b6-a19e-0f7e892d1f24.png)
 
 v0.1<br>
   -Cobra Kai UI<br>
@@ -13,6 +16,8 @@ v0.1<br>
   -Z offset babysteps at 0.01<br>
   -M117 Enabled for comments (Layer height etc)<br>
   -49 Autolevel Mesh Points<br>
+
+![M117](https://user-images.githubusercontent.com/23300461/228777351-6442d35b-c4c7-4670-8450-9886bdc6070f.png)
 
 Instructions for installing printer firmware:<br>
 
