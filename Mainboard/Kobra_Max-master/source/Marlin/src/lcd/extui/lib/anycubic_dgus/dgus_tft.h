@@ -36,7 +36,7 @@
 #include "../../ui_api.h"
 
 #define DEVICE_NAME             "Anycubic Kobra Max"
-#define FIRMWARE_VER            "Kobra Max V2.8.7"
+#define FIRMWARE_VER            "malebuffy K-Max V2.8.7"
 #define BUILD_VOLUME            "400*400*450 (mm)"
 #define TECH_SUPPORT            "https://www.anycubic.com"
 
@@ -61,7 +61,9 @@
 #define PAGE_LEVEL_ADVANCE (17+PAGE_OFFSET)
 #define PAGE_PREHEAT       (18+PAGE_OFFSET)
 #define PAGE_FILAMENT      (19+PAGE_OFFSET)
+
 #define PAGE_PREVIEW       (88+PAGE_OFFSET)
+#define PAGE_TERMINAL       (93+PAGE_OFFSET)
 
 #define PAGE_DONE           (20+PAGE_OFFSET)
 #define PAGE_ABNORMAL       (21+PAGE_OFFSET)
@@ -233,7 +235,10 @@
 #define TXT_ABOUT_PRINT_VOLUMN   0x2770
 #define TXT_ABOUT_TECH_SUPPORT   0x2790
 
+//TERMINAL PAGE
 
+
+#define		TXT_TERMINAL_COMMAND		0x4000
 
 
 /*********************** KEY VALUE **************************/
@@ -318,10 +323,7 @@
 #define KEY_PRINT_SPEED_DEC 5
 #define KEY_SPEED_ENSURE    6
 
-  
-
-
-
+ 
 
 #define KEY_PREPARE_TO_MAIN    1  //PREPARE PAGE TO MAIN
 #define KEY_PREPARE_TO_PreLEVE 2
@@ -367,9 +369,7 @@
 
 
 #define COLOR_RED              0xf800
-#define COLOR_WHITE             0x0210
 #define COLOR_WHITE            0xffff
-
 
 
 namespace Anycubic {
@@ -487,7 +487,7 @@ namespace Anycubic {
       static void page207_209_handle(void);
 			static void pageIco_handle(void);  // PreviewPage handler
       static void page211_212_handle(void);
-
+			static void pageTer_handle(void);  // PreviewPage handler
       static void pop_up_manager(void);
 
       void SendtoTFT(PGM_P);

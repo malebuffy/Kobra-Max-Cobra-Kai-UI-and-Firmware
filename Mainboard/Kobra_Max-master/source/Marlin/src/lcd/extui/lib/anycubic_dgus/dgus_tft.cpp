@@ -46,6 +46,8 @@
 
 // BEGIN SPECIAL CODE
 
+#include "serial.h"
+
 #include <stdio.h>
 #include <cstring>
 #include <string>
@@ -54,10 +56,16 @@
 #include <stdint.h>
 #include <sstream>
 
+const uint8_t TXT_TERMINAL[15] = { 0x401E, 0x403C , 0x405A , 0x4078 , 0x4096 , 0x40B4 , 0x40D2 , 0x40F0 , 0x410E , 0x412C , 0x414A , 0x4168 , 0x4186 , 0x41A4 , 0x41C2 };
+const int max_command_size = 30;
+char command[max_command_size+1] = {0}; // +1 for null terminator
+int command_index = 0;
+int lineindex = 0;
+const char* lastserialmagic = "";
 
 
+const char* myThumbnail = nullptr;
 
-const char* myThumbnail;
 typedef struct {
   char name[13] = "";   //8.3 + null
   uint32_t thumbstart = 0;
@@ -88,7 +96,10 @@ void fileprop_t::clear() {
   fileprop.thumbsize = 0;
   fileprop.thumbheight = 0;
   fileprop.thumbwidth = 0;
-  fileprop.thumbdata = nullptr;
+   if (thumbdata != nullptr) {
+    delete[] thumbdata;
+    thumbdata = nullptr;
+	}
   fileprop.time = 0;
   fileprop.filament = 0;
   fileprop.layer = 0;
@@ -190,6 +201,7 @@ bool Has_Preview() {
 
   uint16_t readed = 0;
   char buf64[fileprop.thumbsize];
+	
   myThumbnail = new char[fileprop.thumbsize + 1]; // Reserve space for the JPEG thumbnail
 
   while (readed < fileprop.thumbsize) {
@@ -203,9 +215,16 @@ bool Has_Preview() {
   buf64[readed] = 0;
 
   memcpy((void*)myThumbnail, buf64, fileprop.thumbsize + 1);
+	delete[] fileprop.thumbdata;
   return true;
 }
 
+void Release_Thumbnail() {
+  if (myThumbnail != nullptr) {
+    delete[] myThumbnail;
+    myThumbnail = nullptr;
+  }
+}
 
 // END SPECIAL CODE
 
@@ -459,6 +478,10 @@ namespace Anycubic {
     } else if(page_index_now == 211 || page_index_now == 212) {
 
       page211_212_handle();
+		
+		} else if(page_index_now == 213) {
+
+      pageTer_handle();
 
     } else {
 
@@ -713,7 +736,6 @@ namespace Anycubic {
             SERIAL_ECHOLNPAIR("send M108 ", __LINE__);
 #endif
             injectCommands_P(PSTR("M108"));
-
             if(pause_state != AC_paused_filament_lack) {
               pause_state = AC_paused_idle;
             }
@@ -747,7 +769,7 @@ namespace Anycubic {
         if (strcmp_P(msg + strlen(CUSTOM_MACHINE_NAME), MARLIN_msg_ready) == 0) {
           if(probe_cnt == GRID_MAX_POINTS_X*GRID_MAX_POINTS_Y) {
             probe_cnt = 0;
-            setZOffset_mm(0.05);
+            setZOffset_mm(0.01);
             injectCommands_P(PSTR("M500"));
             FakeChangePageOfTFT(PAGE_PreLEVEL); // this avoid a overquick UI fresh when probing done
             printer_state = AC_printer_idle;
@@ -1703,7 +1725,7 @@ namespace Anycubic {
 								 
 							if (Has_Preview()) { 
 
-									char buf[46];
+									char buf[46] = "";
 									char str_1[6] = "";
 									char str_2[6] = "";
 									char str_3[6] = "";
@@ -1726,7 +1748,7 @@ namespace Anycubic {
 									}
 															
 									 SendHexToTFT(myThumbnail);
-									 delete[] myThumbnail;	
+									 Release_Thumbnail();	
 									 SendHexToTFT("5AA507827FFE5AA58000");
 
 							} else {
@@ -1740,6 +1762,10 @@ namespace Anycubic {
 									  SendHexToTFT("5AA507827FFE5AA80000");
 						}
 							
+									// Release memmory
+									fileprop.clear();
+									Release_Thumbnail();	
+									
 									// Change to Preview Screen
 									ChangePageOfTFT(PAGE_PREVIEW);
             }
@@ -1887,9 +1913,563 @@ namespace Anycubic {
   }
 	
 	
+		void DgusTFT::pageTer_handle(void) {
+		 	
+				if(lastserialmagic != serialmagic) { 
+				lastserialmagic = serialmagic;
+				if(lineindex < 15 ) { 
+					SendTxtToTFT(serialmagic, TXT_TERMINAL[lineindex]);
+					SendTxtToTFT("TEST", 0x401E);
+					lineindex++;
+ 				}	else {
+					SendTxtToTFT("TEST", 0x401E);
+					}
+				}
+			
+    
+	switch (key_value) {
 	
 
+	
+	case 0:
+	{
+
+  }
+  break;
+
+	case 0x0999: // return
+	  {
+		memset(command, 0, sizeof(command));
+		command_index =0;
+		command[command_index+1] = {0};
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+		lcd_txtbox_index = 0;
+	  ChangePageOfTFT(PAGE_SYSTEM_CHS_AUDIO_ON);
+	   
+	  }
+	  break;
+		
+			case 0x0001: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '1';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+	   
+	  }
+	  break;
+
+			case 0x0002: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '2';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}
+	  break;
+
     
+		
+			case 0x0003: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '3';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		 }
+	  break;
+
+   
+		
+		
+      case 0x0004: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '4';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}
+	  break;
+
+  
+
+			case 0x0005: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '5';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		  }
+	  break;
+
+    
+	
+		
+			case 0x0006: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '6';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}		
+	  break;
+
+    
+		
+			case 0x0007: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '7';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}		
+	  break;
+
+    
+		
+			case 0x0008: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '8';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}
+	  break;
+
+    		
+			case 0x0009: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '9';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}
+	  break;
+
+    		
+			case 0x0010: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '0';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}
+	  break;
+
+    		
+			case 0x0011: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'Q';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+
+    	
+		case 0x0012: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'W';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0013: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'E';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+	}
+	  break;
+		
+		case 0x0014: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'R';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		case 0x0015: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'T';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0016: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'Y';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0017: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'U';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0018: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'I';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0019: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'O';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0020: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'P';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0021: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'A';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0022: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'S';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0023: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'D';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0024: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'F';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+		break;
+		
+		
+		case 0x0025: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'G';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0026: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'H';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0027: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'J';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0028: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'K';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0029: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'L';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0030: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '-';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0031: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'Z';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+				case 0x0032: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'X';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+	     case 0x0033: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'C';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0034: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'V';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0035: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'B';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0036: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'N';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0037: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = 'M';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0038: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = ' ';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0039: 
+	  {
+		 
+		if (command_index < max_command_size) {
+		command[command_index] = '.';
+		command_index ++;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+		case 0x0040: 
+	  {
+		 
+		if (command_index > 0) {
+		command[command_index] = ' ';
+		command_index --;
+		command[command_index] = '\0';
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+	  }
+		}	
+	  break;
+		
+				case 0x41: 
+	  {
+		 
+		if (command_index > 0) {
+		memset(command, 0, sizeof(command));
+		command_index = 0;
+		command[command_index+1] = {0};
+	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
+		injectCommands_P(PSTR(command));  
+	  }
+		}	
+	  break;
+		
+			 }
+    }
+  
+
+
+
+  
+		
+		
     void DgusTFT::page3_handle(void)
     {
         
@@ -2096,7 +2676,7 @@ namespace Anycubic {
             return ;
         }
 
-        steps = mmToWholeSteps(-0.05, Z);
+        steps = mmToWholeSteps(-0.01, Z);
         babystepAxis_steps(steps, Z);
 
         z_off -= 0.01f;
@@ -2117,7 +2697,7 @@ namespace Anycubic {
             return ;
         }
 
-        steps = mmToWholeSteps(0.05, Z);
+        steps = mmToWholeSteps(0.01, Z);
         babystepAxis_steps(steps, Z);
 
         z_off += 0.01f;
@@ -2515,6 +3095,16 @@ namespace Anycubic {
             }
           }
           break;
+					
+					case 9:   // Change to Terminal 
+          {
+
+						MYSERIAL0.begin(115200);
+						ChangePageOfTFT(PAGE_TERMINAL);
+ 				
+           }
+          
+          break;
 
           case 2:   // language
           {
@@ -2762,7 +3352,7 @@ namespace Anycubic {
                     return ;
                 }
 
-                steps = mmToWholeSteps(-0.05, Z);
+                steps = mmToWholeSteps(-0.01, Z);
                 babystepAxis_steps(steps, Z);
 
                 z_off -= 0.01f;
@@ -2783,7 +3373,7 @@ namespace Anycubic {
                     return ;
                 }
 
-                steps = mmToWholeSteps(0.05, Z);
+                steps = mmToWholeSteps(0.01, Z);
                 babystepAxis_steps(steps, Z);
 
                 z_off += 0.01f;
@@ -3470,6 +4060,15 @@ namespace Anycubic {
             }
           }
           break;
+					
+										case 9:   // Change to Terminal 
+          {
+
+						MYSERIAL0.begin(115200);
+						ChangePageOfTFT(PAGE_TERMINAL);
+ 				
+           }
+					 break;
 
           case 2:   // language
           {
@@ -3925,7 +4524,7 @@ namespace Anycubic {
             return ;
         }
 
-        steps = mmToWholeSteps(-0.05, Z);
+        steps = mmToWholeSteps(-0.01, Z);
         babystepAxis_steps(steps, Z);
 
         z_off -= 0.01f;
@@ -3946,7 +4545,7 @@ namespace Anycubic {
             return ;
         }
 
-        steps = mmToWholeSteps(0.05, Z);
+        steps = mmToWholeSteps(0.01, Z);
         babystepAxis_steps(steps, Z);
 
         z_off += 0.01f;
