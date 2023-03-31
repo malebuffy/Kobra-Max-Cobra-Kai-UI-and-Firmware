@@ -1,10 +1,10 @@
 # Kobra-Max-Cobra-Kai-UI-and-Firmware
-New Kobra Max UI based on Cobra Kai and M117 Support and G-code Thumbnail Preview
+New Kobra Max UI based on Cobra Kai and M117 Support, G-code Thumbnail Preview and Terminal App inside of Menu
 
 Changelog:
 
 v0.2<br>
--Enabled Linear Advance for those who are brave enough to try it :)<br>
+-Enabled Linear Advance for those who are brave enough to try it :)<br>Cancel changes
 -Fixed babystep bug<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
   <br>
