@@ -56,12 +56,13 @@
 #include <stdint.h>
 #include <sstream>
 
-const uint8_t TXT_TERMINAL[15] = { 0x401E, 0x403C , 0x405A , 0x4078 , 0x4096 , 0x40B4 , 0x40D2 , 0x40F0 , 0x410E , 0x412C , 0x414A , 0x4168 , 0x4186 , 0x41A4 , 0x41C2 };
+const uint32_t TXT_TERMINAL[15] = { 0x401E, 0x403C , 0x405A , 0x4078 , 0x4096 , 0x40B4 , 0x40D2 , 0x40F0 , 0x410E , 0x412C , 0x414A , 0x4168 , 0x4186 , 0x41A4 , 0x41C2 };
 const int max_command_size = 30;
 char command[max_command_size+1] = {0}; // +1 for null terminator
 int command_index = 0;
 int lineindex = 0;
 const char* lastserialmagic = "";
+
 
 
 const char* myThumbnail = nullptr;
@@ -1914,17 +1915,22 @@ namespace Anycubic {
 	
 	
 		void DgusTFT::pageTer_handle(void) {
-		 	
+		
+
 				if(lastserialmagic != serialmagic) { 
+				
 				lastserialmagic = serialmagic;
 				if(lineindex < 15 ) { 
+					
 					SendTxtToTFT(serialmagic, TXT_TERMINAL[lineindex]);
-					SendTxtToTFT("TEST", 0x401E);
+
 					lineindex++;
+					
  				}	else {
-					SendTxtToTFT("TEST", 0x401E);
-					}
-				}
+					SendTxtToTFT(serialmagic, 0x41C2);
+					
+					}     
+				}      
 			
     
 	switch (key_value) {
@@ -1944,6 +1950,22 @@ namespace Anycubic {
 		command[command_index+1] = {0};
 	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
 		lcd_txtbox_index = 0;
+		
+		SendTxtToTFT("", 0x401E);
+		SendTxtToTFT("", 0x403C);
+		SendTxtToTFT("", 0x405A);
+		SendTxtToTFT("", 0x4078);
+		SendTxtToTFT("", 0x4096);
+		SendTxtToTFT("", 0x40B4);
+		SendTxtToTFT("", 0x40D2);
+		SendTxtToTFT("", 0x40F0);
+		SendTxtToTFT("", 0x410E);
+		SendTxtToTFT("", 0x412C);
+		SendTxtToTFT("", 0x4168);
+		SendTxtToTFT("", 0x4186);
+		SendTxtToTFT("", 0x41A4);
+		SendTxtToTFT("", 0x41C2);
+		lineindex = 0;
 	  ChangePageOfTFT(PAGE_SYSTEM_CHS_AUDIO_ON);
 	   
 	  }
@@ -2452,11 +2474,13 @@ namespace Anycubic {
 	  {
 		 
 		if (command_index > 0) {
-		memset(command, 0, sizeof(command));
+
+    command[command_index+1] = '\0';		
+		injectCommands(PSTR(command));
+		
 		command_index = 0;
 		command[command_index+1] = {0};
-	  SendTxtToTFT(command, TXT_TERMINAL_COMMAND);
-		injectCommands_P(PSTR(command));  
+		SendTxtToTFT("", TXT_TERMINAL_COMMAND);
 	  }
 		}	
 	  break;

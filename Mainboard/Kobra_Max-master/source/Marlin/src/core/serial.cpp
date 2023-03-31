@@ -28,12 +28,15 @@ uint8_t marlin_debug_flags = MARLIN_DEBUG_NONE;
 static PGMSTR(errormagic, "Error:");
 static PGMSTR(echomagic, "echo:");
 
+
 #if HAS_MULTI_SERIAL
   int8_t serial_port_index = 0;
 #endif
 
 void serialprintPGM(PGM_P str) {
-  while (const char c = pgm_read_byte(str++)) SERIAL_CHAR(c);
+  while (const char c = pgm_read_byte(str++)) {
+    SERIAL_CHAR(c);
+  }
 }
 void serial_echo_start()  { serialprintPGM(echomagic); }
 void serial_error_start() { serialprintPGM(errormagic); }

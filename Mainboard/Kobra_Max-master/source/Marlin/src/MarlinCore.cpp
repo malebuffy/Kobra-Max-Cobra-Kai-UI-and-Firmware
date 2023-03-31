@@ -254,6 +254,7 @@ volatile HomingState homing_state = NOT_HOMING;
 // Define gcodeComment
 
    const char * gcodeComment = "G-Code Status Area";
+   const char * serialmagic = "Gcode Terminal";
 
 // For M109 and M190, this flag may be cleared (by M108) to exit the wait loop
 bool wait_for_heatup = true;

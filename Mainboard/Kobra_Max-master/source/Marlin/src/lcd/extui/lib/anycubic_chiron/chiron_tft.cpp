@@ -893,9 +893,9 @@ namespace Anycubic {
               setSoftEndstopState(false);
               float currZpos = getAxisPosition_mm(Z);
               #if ACDEBUG(AC_INFO)
-                SERIAL_ECHOLNPAIR("Move Z pos from ", currZpos, " to ", currZpos + constrain(newval - currmesh, -0.05, 0.05));
+                SERIAL_ECHOLNPAIR("Move Z pos from ", currZpos, " to ", currZpos + constrain(newval - currmesh, -0.01, 0.01));
               #endif
-              setAxisPosition_mm(currZpos + constrain(newval - currmesh, -0.05f, 0.05f), Z);
+              setAxisPosition_mm(currZpos + constrain(newval - currmesh, -0.01f, 0.01f), Z);
             }
           }
         }

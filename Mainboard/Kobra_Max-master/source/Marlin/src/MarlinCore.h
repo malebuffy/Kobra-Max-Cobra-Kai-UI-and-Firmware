@@ -33,6 +33,7 @@
 #include <stdlib.h>
 
 extern const char * gcodeComment;
+extern const char * serialmagic;
 extern char pause_steps ;
 
 void stop();

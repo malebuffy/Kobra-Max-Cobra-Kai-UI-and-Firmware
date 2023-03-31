@@ -195,13 +195,16 @@ namespace Anycubic {
     n_END
   };
 
-  const uint16_t Anycubic_PowerOn[] = {
-    1000,
-    n_F7,l_T8, n_P,l_T8, n_C7,l_T8, n_P,l_T8, n_D7,l_T8, n_P,l_T8,
-    n_E7,l_T8, n_P,l_T8, n_D7,l_T4, n_P,l_T4, n_G7,l_T4, n_P,l_T4,
-    n_A7,l_T2, n_P,l_T1,
-    n_END
-  };
+const uint16_t Anycubic_PowerOn[] = {
+  600, // The tenor saxophone part was used
+
+  n_E5, l_T4, n_D5, l_T4, n_FS4, l_T2, n_GS4, l_T2, 
+  n_CS5, l_T4, n_B4, l_T4, n_D4, l_T2, n_E4, l_T2, 
+  n_B4, l_T4, n_A4, l_T4, n_CS4, l_T2, n_E4, l_T2,
+  n_A4, l_T2, 
+  n_END
+};
+
 
   const uint16_t GB_PowerOn[] = {
     500,

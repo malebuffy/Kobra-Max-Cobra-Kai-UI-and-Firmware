@@ -300,6 +300,10 @@ extern uint8_t marlin_debug_flags;
 //
 // Functions for serial printing from PROGMEM. (Saves loads of SRAM.)
 //
+
+
+extern const char * serialmagic;
+
 void serial_echopair_PGM(PGM_P const s_P, const char *v);
 void serial_echopair_PGM(PGM_P const s_P, char v);
 void serial_echopair_PGM(PGM_P const s_P, int v);
