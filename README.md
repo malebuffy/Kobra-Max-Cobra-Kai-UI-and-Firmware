@@ -4,11 +4,17 @@ New Kobra Max UI based on Cobra Kai and M117 Support and G-code Thumbnail Previe
 Changelog:
 
 v0.2<br>
+-Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
+  <br>
+<img src="https://user-images.githubusercontent.com/23300461/229234694-ee81c843-e837-4f93-a992-ef81a38e1b2c.jpg" width=52% height=52%>
+
+
+v0.2<br>
   -Added G-Code Preview function<br>
   -Cura Post-Script <br>
   <br>
   
-![Preview](https://user-images.githubusercontent.com/23300461/228777395-b01aed67-0d09-40b6-a19e-0f7e892d1f24.png)
+![Preview](https://user-images.githubusercontent.com/23300461/228777395-b01aed67-0d09-40b6-a19e-0f7e892d1f24.png) 
 
 v0.1<br>
   -Cobra Kai UI<br>
