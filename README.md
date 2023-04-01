@@ -3,7 +3,7 @@ New Kobra Max UI based on Cobra Kai and M117 Support, G-code Thumbnail Preview a
 
 Changelog:
 
-v0.2<br>
+v0.4<br>
 -Enabled Linear Advance for those who are brave enough to try it :)<br>Cancel changes
 -Fixed babystep bug<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
