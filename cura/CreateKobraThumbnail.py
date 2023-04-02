@@ -118,7 +118,7 @@ class CreateKobraThumbnail(Script):
                 encoded_snapshot = self._encodeSnapshot(snapshot, quality)
                 snapshot_gcode = self._convertSnapshotToGcode(encoded_snapshot)
                 final_size = len("\n".join(snapshot_gcode))
-                if final_size < 5500:
+                if final_size < 5200:
                     break
                 quality -= 3
 
