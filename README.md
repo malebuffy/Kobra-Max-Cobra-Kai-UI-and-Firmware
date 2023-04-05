@@ -53,7 +53,7 @@ Instructions for installing G-Code Thumbnail Script in Prusa slicer:<br>
 ![GcodeThumbnailSettings](https://user-images.githubusercontent.com/23300461/230036953-d3c77076-a38a-4a7e-acf8-648e81de2cfd.png)
 
 <br>
-For anyone that wants to tinker with firmware!<br>
+For anyone that wants to tinker with firmware!<br> 
 
 -I am not invent the wheel again. Here are two tutorials on how you can compile the firmware<br>
 <br>
