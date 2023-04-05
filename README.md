@@ -47,11 +47,11 @@ Instructions for installing G-Code Thumbnail Script in Cura:<br>
 Instructions for installing G-Code Thumbnail Script in Prusa slicer:<br>
 -Put the script somewhere where it will not be deleted. I did put it in the python311 folder<br>
 -In printer settings, look at the firmware settings and change the size to 150x120 and PNG according to the below image.<br>
-![postscript](https://user-images.githubusercontent.com/23300461/230036721-274c6de9-55e1-4c38-96b5-11063a6e04b4.png)
-
--In print settings in the output category, put the path as in the below picture. Change according to where you placed your script.<br>
 ![GcodeThumbnailSettings](https://user-images.githubusercontent.com/23300461/230036953-d3c77076-a38a-4a7e-acf8-648e81de2cfd.png)
 
+-In print settings in the output category, put the path as in the below picture. Change according to where you placed your script.<br>
+
+![postscript](https://user-images.githubusercontent.com/23300461/230036721-274c6de9-55e1-4c38-96b5-11063a6e04b4.png)
 <br>
 For anyone that wants to tinker with firmware!<br> 
 
