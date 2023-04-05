@@ -74,12 +74,12 @@ for idx, match in enumerate(thumb_matches):
         header_address = start_address
         chunks = [encodedjpg[i:i+chunk_size*2] for i in range(0, len(encodedjpg), chunk_size*2)]  # split into chunks
         last_chunk = chunks[-1]  # get the last chunk
-        if len(last_chunk) < chunk_size*2:  # if the last chunk is shorter than 241 bytes
+        if len(last_chunk) < chunk_size*2:  # if the last chunk is shorter than 240 bytes
             last_chunk = last_chunk.ljust(chunk_size*2, '0')  # add zeroes to make it 241 bytes long
             chunks[-1] = last_chunk  # replace the last chunk with the new chunk
         final_chunk_length = len(chunks[-1]) // 2  # get the length of the last chunk in bytes
         last_chunk = chunks[-1]  # get the last chunk again
-        last_chunk = last_chunk.ljust(chunk_size*2, '0')  # add zeroes to make it 241 bytes long
+        last_chunk = last_chunk.ljust(chunk_size*2, '0')  # add zeroes to make it 240 bytes long
         chunks[-1] = last_chunk  # replace the last chunk again
         for i, chunk in enumerate(chunks):
             chunk = header + header_address + chunk  # add headers to the chunk
