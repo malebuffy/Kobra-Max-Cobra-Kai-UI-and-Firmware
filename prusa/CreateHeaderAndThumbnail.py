@@ -91,7 +91,7 @@ for idx, match in enumerate(thumb_matches):
         encodedjpg_gcode = encodedStringToGcodeComment(encodedjpg)
         new_size = len(encodedjpg_gcode)
 
-        if new_size < 5000:
+        if new_size < 4000:
             break
         else:
             quality -= 3
