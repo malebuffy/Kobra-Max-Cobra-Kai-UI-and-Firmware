@@ -67,7 +67,7 @@ for idx, match in enumerate(thumb_matches):
         encodedjpg = img_byte_arr.hex()
 
         # Add headers to the encodedjpg hex array
-        header = "5aa5f382"
+        header = "5AA5F382"
         start_address = "8000"
         chunk_size = 240
         header_counter = 0
