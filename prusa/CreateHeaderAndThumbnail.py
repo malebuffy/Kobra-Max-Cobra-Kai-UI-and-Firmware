@@ -7,6 +7,8 @@
 # version: 1.5
 # date: 2022/05/29
 #
+# Modified for the Kobra Max by Vasileios Antoniadis 
+#
 # Contains code from the jpg re-encoder thumbnail post processor script:
 # github.com/alexqzd/Marlin/blob/Gcode-preview/Display%20firmware/gcode_thumb_to_jpg.py
 # ------------------------------------------------------------------------------
