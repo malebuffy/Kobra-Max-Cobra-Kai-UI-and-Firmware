@@ -6,6 +6,7 @@ Changelog:
 v0.4<br>
 -Enabled Linear Advance for those who are brave enough to try it :)<br>
 -Fixed babystep bug<br>
+-Fixed temperature reported too low. Changed probe setting from 11 to 5<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
   <br>
 <img src="https://user-images.githubusercontent.com/23300461/229234694-ee81c843-e837-4f93-a992-ef81a38e1b2c.jpg" width=52% height=52%>
