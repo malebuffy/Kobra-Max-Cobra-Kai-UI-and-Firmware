@@ -56,7 +56,7 @@ Instructions for installing G-Code Thumbnail Script in Prusa slicer:<br>
 <br>
 For anyone that wants to tinker with firmware!<br> 
 
--I am not invent the wheel again. Here are two tutorials on how you can compile the firmware<br>
+-I am not invent the wheel again. Here is a tutorial on how you can compile the firmware<br>
 <br>
 https://www.reddit.com/r/anycubic/comments/y2waxu/tutorial_how_to_build_anycubic_marlin_source_code/<br>
 <br>
