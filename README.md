@@ -4,7 +4,7 @@ New Kobra Max UI based on Cobra Kai and M117 Support, G-code Thumbnail Preview a
 Changelog:
 
 v0.4<br>
--Enabled Linear Advance for those who are brave enough to try it :)<br>
+-Enabled Linear Advance for those who are brave enough to try it :) Use M569 S0 E in your G-code for it to work properly <br>
 -Fixed babystep bug<br>
 -Fixed temperature reported too low. Changed probe setting from 11 to 5<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
