@@ -3,10 +3,14 @@ New Kobra Max UI based on Cobra Kai and M117 Support, G-code Thumbnail Preview a
 
 Changelog:
 
+v0.5<br>
+-Changing to printing page when printing from host (Octoprint), thanks to wabbitguy <br>
+-Real M600 support, thanks to wabbitguy <br>
+
 v0.4<br>
--Enabled Linear Advance for those who are brave enough to try it :) Use M569 S0 E in your G-code for it to work properly <br>
+-Enabled Linear Advance for those who are brave enough to try it :)<br>
 -Fixed babystep bug<br>
--Fixed temperature reported too low. Changed probe setting from 11 to 5<br>
+-Fixed temperature reported too low. Changed probe setting from 5 to 11<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
   <br>
 <img src="https://user-images.githubusercontent.com/23300461/229234694-ee81c843-e837-4f93-a992-ef81a38e1b2c.jpg" width=52% height=52%>
@@ -56,7 +60,7 @@ Instructions for installing G-Code Thumbnail Script in Prusa slicer:<br>
 <br>
 For anyone that wants to tinker with firmware!<br> 
 
--I am not invent the wheel again. Here is a tutorial on how you can compile the firmware<br>
+-I am not invent the wheel again. Here are two tutorials on how you can compile the firmware<br>
 <br>
 https://www.reddit.com/r/anycubic/comments/y2waxu/tutorial_how_to_build_anycubic_marlin_source_code/<br>
 <br>

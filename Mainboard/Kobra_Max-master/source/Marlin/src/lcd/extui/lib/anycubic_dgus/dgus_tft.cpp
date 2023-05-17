@@ -1581,20 +1581,16 @@ namespace Anycubic {
 	  case 0:
       break;
 
-	  case 1:   // main page, print
-	  {
+    case 1:   // main page, print
+      lcd_txtbox_page = 0;
 
-        lcd_txtbox_page = 0;
-
-        if(lcd_txtbox_index) {
-          SendColorToTFT(COLOR_WHITE, TXT_DISCRIBE_0+0x30*(lcd_txtbox_index-1));
-          lcd_txtbox_index = 0;
-        }
-
-	    ChangePageOfTFT(PAGE_FILE);
-	    SendFileList(0);
-	  }
-	  break;
+      if (lcd_txtbox_index) {
+        SendColorToTFT(COLOR_WHITE, TXT_DISCRIBE_0 + 0x30 * (lcd_txtbox_index - 1));
+        lcd_txtbox_index = 0;
+      }
+        ChangePageOfTFT(PAGE_FILE);
+        SendFileList(0);
+      break;
 
 	  case 2:   // tool
 	  {
@@ -1642,6 +1638,11 @@ namespace Anycubic {
 	if(millis() < (flash_time + 1500) ) {
 	  return;
 	}
+
+			if (printer_state != AC_printer_idle && isPrinting()) {
+			  gcodeComment = "Host Printing Mode";// MEL_MOD indicate where GCODE coming from
+        ChangePageOfTFT(PAGE_STATUS2);// MEL_MOD auto change to PRINT page if printing via USB
+      } 
 
 	flash_time = millis();
   }
@@ -2487,11 +2488,6 @@ namespace Anycubic {
 		
 			 }
     }
-  
-
-
-
-  
 		
 		
     void DgusTFT::page3_handle(void)
@@ -2522,13 +2518,20 @@ namespace Anycubic {
             SERIAL_ECHOLNPAIR("printer_state: ", printer_state);
             SERIAL_ECHOLNPAIR("pause_state: ", pause_state);
 #endif
+													if (activeFilamentChange == true) {// MEL_MOD that gets back to the normal PAUSE page
+															activeFilamentChange = false;// reset the flag so PAUSE works again
+															TERN_(HAS_RESUME_CONTINUE, wait_for_user = false);// MEL_MOD
+															wait_for_heatup = false;
+															ChangePageOfTFT(PAGE_STATUS2);// MEL_MOD auto change back to print page, we're done
+														} else {
+
             if(pause_state == AC_paused_idle || pause_state == AC_paused_filament_lack ||
                printer_state == AC_printer_resuming_from_power_outage) {
               if(READ(FIL_RUNOUT_PIN) == getFilamentRunoutOriginState()) {
                 printer_state = AC_printer_idle;
                 pause_state = AC_paused_idle;
                 resumePrint();
-                ChangePageOfTFT(PAGE_STATUS2);    // show pasue print
+                ChangePageOfTFT(PAGE_STATUS2);    // show pause print (normal print page)
               } else {
                 pop_up_index = 15;
               }
@@ -2537,6 +2540,9 @@ namespace Anycubic {
             } else {
               setUserConfirmed();
             }
+						
+						}
+						
             break;
 
           case 3: // print stop
@@ -2577,8 +2583,6 @@ namespace Anycubic {
           progress_last=getProgress_percent();
           sprintf(str_buf, "%u", progress_last);
           SendTxtToTFT(str_buf, TXT_PRINT_PROGRESS);
-					
-					
         }
 
         // Get Printing Time
@@ -2590,88 +2594,94 @@ namespace Anycubic {
 
     }
 
-    void DgusTFT::page4_handle(void)
-    {
-        
-        static millis_t flash_time = 0;
-        char str_buf[20];
-        static uint8_t progress_last = 0;
-		static uint16_t feedrate_last = 0;
-    
-        switch (key_value)
-        {
-        case 0:
-          break;
+void DgusTFT::page4_handle(void) {
 
-        case 1: // return
-        {
-          if(isPrintingFromMedia() == false) {
-  //            if(card.sdprinting==false)//only is idle status can return
-              ChangePageOfTFT(PAGE_FILE);
-          }
+  static millis_t flash_time = 0;
+  char str_buf[20];
+  static uint8_t progress_last = 0;
+  static uint16_t feedrate_last = 0;
+
+  switch (key_value)
+  {
+    case 0:
+      break;
+
+    case 1: // return
+      {
+        if (isPrintingFromMedia() == false) {
+          //            if(card.sdprinting==false)//only is idle status can return
+          ChangePageOfTFT(PAGE_FILE);
         }
-        break;
+      }
+      break;
 
-        case 2:  // print pause
-          if(isPrintingFromMedia()) {
-            pausePrint();
-            printer_state = AC_printer_pausing;
-            pause_state = AC_paused_idle;
-            ChangePageOfTFT(PAGE_WAIT_PAUSE);
-//            injectCommands_P(PSTR("M108"));     // stop waiting temperature M109
-          }
-          break;
+    case 2:  // print pause (or continue) MEL_MOD
+      if (isPrintingFromMedia()) {
+          pausePrint();
+          printer_state = AC_printer_pausing;
+          pause_state = AC_paused_idle;
+          ChangePageOfTFT(PAGE_WAIT_PAUSE);
+        }
+      break;
 
-        case 3: // print stop
-          if(isPrintingFromMedia()) {    
-              ChangePageOfTFT(PAGE_STOP_CONF);
-          }
-          break;
+    case 3: // print stop
+      if (isPrintingFromMedia()) {
+        ChangePageOfTFT(PAGE_STOP_CONF);
+      }
+      break;
 
-        case 4: // print settings
+    case 4: // print settings
 
 #ifdef CASE_LIGHT_ENABLE
-          ChangePageOfTFT(PAGE_CHS_PRINTING_SETTING);
-          SendValueToTFT(getCaseLightState(), ADDRESS_PRINT_SETTING_LED_STATUS);
+      ChangePageOfTFT(PAGE_CHS_PRINTING_SETTING);
+      SendValueToTFT(getCaseLightState(), ADDRESS_PRINT_SETTING_LED_STATUS);
 #else
-          ChangePageOfTFT(PAGE_ADJUST);
+      ChangePageOfTFT(PAGE_ADJUST);
 #endif
 
-          SendValueToTFT((uint16_t)getTargetTemp_celsius(E0), TXT_ADJUST_HOTEND);
-          SendValueToTFT((uint16_t)getTargetTemp_celsius(BED), TXT_ADJUST_BED);
-          feedrate_last = (uint16_t)getFeedrate_percent();
-          SendValueToTFT(feedrate_last, TXT_ADJUST_SPEED);   
-          SendValueToTFT((uint16_t)getActualFan_percent(FAN0), TXT_FAN_SPEED_TARGET);
-          SendTxtToTFT(ftostr(getZOffset_mm()), TXT_LEVEL_OFFSET);
+      SendValueToTFT((uint16_t)getTargetTemp_celsius(E0), TXT_ADJUST_HOTEND);
+      SendValueToTFT((uint16_t)getTargetTemp_celsius(BED), TXT_ADJUST_BED);
+      feedrate_last = (uint16_t)getFeedrate_percent();
+      SendValueToTFT(feedrate_last, TXT_ADJUST_SPEED);
+      SendValueToTFT((uint16_t)getActualFan_percent(FAN0), TXT_FAN_SPEED_TARGET);
+      SendTxtToTFT(ftostr(getZOffset_mm()), TXT_LEVEL_OFFSET);
 
-          break;
-        }
+      break;
+  }
 
-        if(millis() < (flash_time +1500)) {
-          return;
-        }
-        flash_time=millis();
+  if (millis() < (flash_time + 1500)) {
+    return;
+  }
+  flash_time = millis();
 
-        if(feedrate_last != (uint16_t)getFeedrate_percent()) {
-          feedrate_last = (uint16_t)getFeedrate_percent();
-          sprintf(str_buf, "%d", feedrate_last);
-          SendTxtToTFT(str_buf, TXT_PRINT_SPEED);
-        }
+  if (feedrate_last != (uint16_t)getFeedrate_percent()) {
+    feedrate_last = (uint16_t)getFeedrate_percent();
+    sprintf(str_buf, "%d", feedrate_last);
+    SendTxtToTFT(str_buf, TXT_PRINT_SPEED);
+  }
 
-
-        if(progress_last!=getProgress_percent())
-        {
-          sprintf(str_buf, "%d", getProgress_percent());
-          SendTxtToTFT(str_buf, TXT_PRINT_PROGRESS);
-          progress_last=getProgress_percent();
-        }
-
-        uint32_t time = getProgress_seconds_elapsed() / 60;
-        sprintf(str_buf, "%s H ", utostr3(time/60));
-        sprintf(str_buf+strlen(str_buf), "%s M", utostr3(time%60));
-        SendTxtToTFT(str_buf, TXT_PRINT_TIME);
-				SendTxtToTFT(gcodeComment, TXT_PRINT_COMMENT);
+  if (isPrintingFromMedia()) {
+    if (progress_last != getProgress_percent()) {
+      sprintf(str_buf, "%d", getProgress_percent());
+      SendTxtToTFT(str_buf, TXT_PRINT_PROGRESS);
+      progress_last = getProgress_percent();
     }
+  } else { // we are printing from a HOST
+    sprintf(str_buf, "Z:%3.2f", getAxisPosition_mm(Z));// MELS MOD
+    SendTxtToTFT(str_buf, TXT_PRINT_NAME);// this will show the Z height
+    //sprintf(str_buf, "%d", getProgress_percent());
+    //SendTxtToTFT(str_buf, TXT_PRINT_PROGRESS);
+  }
+
+  uint32_t time = getProgress_seconds_elapsed() / 60;
+  sprintf(str_buf, "%s H ", utostr3(time / 60));
+  sprintf(str_buf + strlen(str_buf), "%s M", utostr3(time % 60));
+  SendTxtToTFT(str_buf, TXT_PRINT_TIME);
+	if (activeFilamentChange == true) {
+		 ChangePageOfTFT(PAGE_STATUS1);// MEL_MOD auto change to RESUME page for filament change
+	}
+		SendTxtToTFT(gcodeComment, TXT_PRINT_COMMENT);// MEL_MOD malebuffy
+}
 
     void DgusTFT::page5_handle(void)          // print settings
     {
@@ -3494,32 +3504,34 @@ namespace Anycubic {
               }
               break;
 
-              case 2:   // Filament in
-              if(getActualTemp_celsius(E0)<220) {
-                filament_cmd = FILA_NO_ACT;
-                ChangePageOfTFT(PAGE_FILAMENT_HEAT);
-              } else {
-                if(getTargetTemp_celsius(E0) < 230) {
-                  setTargetTemp_celsius(230, E0);
-                }
-                filament_cmd = FILA_IN;
-              }
-              break;
+               case 2:   // Filament in
+      if (getActualTemp_celsius(E0) < 220) {
+        filament_cmd = FILA_NO_ACT;
+        ChangePageOfTFT(PAGE_FILAMENT_HEAT);
+      } else {
+        if (getTargetTemp_celsius(E0) < 230) {
+          setTargetTemp_celsius(230, E0);
+        }
+        injectCommands_P(MEL_cmnd_auto_load_Filament);// MELS mod to quickly load/purge filament
+        //filament_cmd = FILA_IN;// no longer needed.
+      }
+      break;
 
-              case 3:   // filament out
-              if(getActualTemp_celsius(E0)<220) {
-                filament_cmd = FILA_NO_ACT;
-                ChangePageOfTFT(PAGE_FILAMENT_HEAT);
-              } else {
-                if(getTargetTemp_celsius(E0) < 230) {
-                  setTargetTemp_celsius(230, E0);
-                }
-                if(filament_cmd == FILA_NO_ACT) {
-                  injectCommands_P(AC_cmnd_manual_unload_filament_first_in);
-                }
-                filament_cmd = FILA_OUT;
-              }
-              break;
+    case 3:   // filament out
+      if (getActualTemp_celsius(E0) < 220) {
+        filament_cmd = FILA_NO_ACT;
+        ChangePageOfTFT(PAGE_FILAMENT_HEAT);
+      } else {
+        if (getTargetTemp_celsius(E0) < 230) {
+          setTargetTemp_celsius(230, E0);
+        }
+        if (filament_cmd == FILA_NO_ACT) {
+          //injectCommands_P(AC_cmnd_manual_unload_filament_first_in);
+          injectCommands_P(MEL_cmnd_auto_unload_filament);// MELS mod to quickly remove filament
+        }
+        //filament_cmd = FILA_OUT;// don't need this any more
+      }
+      break;
 
               case 4:   // stop
                 filament_cmd = FILA_NO_ACT;

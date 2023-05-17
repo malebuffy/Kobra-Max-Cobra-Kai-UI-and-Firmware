@@ -255,6 +255,8 @@ volatile HomingState homing_state = NOT_HOMING;
 
    const char * gcodeComment = "G-Code Status Area";
    const char * serialmagic = "Gcode Terminal";
+	 bool activeFilamentChange = false;// MEL_MOD flag for M600 test
+
 
 // For M109 and M190, this flag may be cleared (by M108) to exit the wait loop
 bool wait_for_heatup = true;

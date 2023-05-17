@@ -308,7 +308,8 @@
 #endif
 
 enum AxisRelative : uint8_t { REL_X, REL_Y, REL_Z, REL_E, E_MODE_ABS, E_MODE_REL };
-
+static int16_t colourCounter = 0;// added for inline filament swap
+#define KOBRAMAX_COLOUR_CHANGE true
 
 class GcodeSuite {
 public:
