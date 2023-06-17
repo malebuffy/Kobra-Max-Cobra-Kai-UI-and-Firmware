@@ -8,7 +8,7 @@ v0.5<br>
 -Real M600 support, thanks to wabbitguy <br>
 
 v0.4<br>
--Enabled Linear Advance for those who are brave enough to try it :)<br>
+-Enabled Linear Advance for those who are brave enough to try it :) Use M569 S0 E to disable stealthchop <br>
 -Fixed babystep bug<br>
 -Fixed temperature reported too low. Changed probe setting from 5 to 11<br>
 -Added G-Code Terminal Application in Main Menu (send only at the moment, no display of results in the screen)<br>
