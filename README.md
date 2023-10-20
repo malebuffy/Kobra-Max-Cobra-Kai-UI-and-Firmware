@@ -1,6 +1,6 @@
 # Kobra-Max-Cobra-Kai-UI-and-Firmware
 New Kobra Max UI based on Cobra Kai and M117 Support, G-code Thumbnail Preview and Terminal App inside of Menu
-ONLY FOR OLD SCREEN TYPE!!!!
+<br>ONLY FOR OLD SCREEN TYPE!!!!
 
 Changelog:
 
